@@ -1,7 +1,7 @@
 # Lifeboat — Offline Emergency Brain: Research and Design
 
 Written 2026-11-02, during the first build. Sections 1–6 are the original research and plan.
-Sections 7–8 record what the build decided and changed.
+Sections 7–9 record what the build decided, changed, and found in testing.
 
 ## 1. Hardware (reference build)
 
@@ -127,7 +127,7 @@ Total: ~95 GB core. ~215 GB with full Wikipedia. Add maps on top.
   ssh stdin/stdout, so it works on hosts that forbid TCP forwarding and needs no open ports. At run
   time Lifeboat never contacts a helper.
 - **llama.cpp CUDA embedding was slow on GB10** (~70/s, the same as the laptop), so vLLM replaced it.
-  vLLM rejects inputs over its `--max-model-len`, so the worker asks it to truncate at 2,048 tokens.
+  vLLM rejects inputs over its `--max-model-len`, so the worker asks it to truncate at 1,024 tokens. If a batch still fails, it retries each text shorter.
 - **Downloads use aria2 with Kiwix metalinks.** One connection to the Kiwix load balancer gave
   0.6 MB/s (Wikimedia rate-limits it). aria2 pulls from every mirror at once and checks each 4 MB
   piece, at ~17–22 MB/s.
@@ -136,3 +136,19 @@ Total: ~95 GB core. ~215 GB with full Wikipedia. Add maps on top.
 - **zimgit archives hold PDFs**, not HTML. The indexer reads PDFs inside ZIMs and takes titles
   from each archive's `database.js`.
 - **No kiwix-serve.** Kiwix ships macOS tools for Intel only. The app reads ZIMs through libzim directly.
+
+## 9. Release testing (2026-11-03)
+
+- **Offline check.** `verify-offline --wifi-off` passed 15 of 15 questions with no outside
+  connections, on the `battery` model at ~7–13 s per answer.
+- **Search words.** "Small engine" found only car posts. A short list in `retrieve.py` (`EXPAND`) adds
+  the library's own words ("lawn mower", "carburetor") to the keyword and vector search. The reranker
+  still scores passages against the question as asked.
+- **Child doses.** Hesperian prints "Do not give more than 8 tablets in 24 hours" right after its
+  child dose table, with no age. The `battery` model copied that adult maximum into a 5-year-old's
+  answer in 3 of 5 tests, even with a prompt rule against it. The `best` model got it right in 5 of 5.
+  Prompt rules were not enough, so a check in code (`_dose_warning` in `server.py`) reads each
+  finished answer. If the question is about a child and the answer gives a dose, the page shows a
+  warning. If the answer mentions an adult acetaminophen or ibuprofen maximum, the warning says so.
+- **Blocked downloads.** Some CDC and FEMA PDFs return 403 to scripts. They are marked `"manual"`;
+  `fetch` tries once, then lists them to save by hand.

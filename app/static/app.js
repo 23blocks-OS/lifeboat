@@ -177,6 +177,7 @@ async function ask(text) {
       else if (ev === "error") { ans.innerHTML += `<p class="err">${esc(data.msg)}</p>`; }
       else if (ev === "done") {
         ans.classList.remove("cursor");
+        if (data.warn) ans.insertAdjacentHTML("afterbegin", `<p class="dose-warn">⚠ ${esc(data.warn)}</p>`);
         renderSources(box, passages, !content);
         if (data.tok_s) meta.textContent = `${data.seconds}s total · ${data.tok_s} tokens/s · search ${data.retrieval.total}s`;
       }

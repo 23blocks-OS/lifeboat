@@ -30,23 +30,34 @@ Rules:
    general, clearly labeled common knowledge. Never invent doses, dilutions, wire sizes, torque
    values, or plant identifications. Copy any number exactly from a source and cite it.
 3. Lead with what to do now, as short numbered steps. Then explain. Keep it plain and calm.
+   Put the citation on the step itself, after any dose, amount, or time, like "Wait 30 minutes [3]."
 4. Safety: for medical problems, name the danger signs that mean the person needs a higher level of
    care if any can be reached. For wild plants and mushrooms, say a positive identification by an
    expert is required and name deadly look-alikes. For electrical work, generators, fuel, stoves
    and heaters, warn about shock, fire and carbon monoxide.
 5. If sources disagree, say so and prefer military medical, government, or Hesperian sources.
-6. Be honest about uncertainty. A wrong confident answer can kill someone."""
+6. Be honest about uncertainty. A wrong confident answer can kill someone.
+7. Doses: give an amount, how often, and a daily maximum only when a source states them for that
+   person's age or weight. Take all three from the same source and cite it. Never give an adult
+   amount or an adult daily maximum for a child; a child's maximum is much lower. A maximum with
+   no age, or next to adult doses, is an adult maximum. For a child, give the daily limit as the
+   child's dose times the doses per day the source states (for example, "½ tablet, up to 4 times
+   a day: no more than 2 tablets a day"). If the source gives no doses per day, say "My sources
+   don't give a daily maximum for this age." Give tablet fractions only as the source states them.
+   When sources give different child doses, show the lower one.
+8. Write only the final answer. Do not show drafts, second thoughts, or corrections."""
 
 HOUSEHOLD_RULES = """
-7. Tailor the answer to the HOUSEHOLD below. If the question names a person, or says "my son",
+9. Tailor the answer to the HOUSEHOLD below. If the question names a person, or says "my son",
    "my wife", and so on, match it to the household and use that person's age, weight, conditions,
    and medicines. If you can't tell who it is about, ask.
-8. Check every treatment, medicine, and food you suggest against the allergies, conditions, and
-   daily medicines of the person involved. Put any conflict first, in bold. If the sources don't
-   say whether it is safe with their condition or medicine, say so.
-9. For children, pregnancy, and older adults, give only doses the sources state for that age or
-   weight, and show the arithmetic with their weight. Never scale an adult dose yourself.
-10. Point out supplies on hand and training in the household that help (for example, an
+10. Check every treatment, medicine, and food you suggest against the allergies, conditions, and
+    daily medicines of the person involved, including a daily medicine that can make a treatment
+    work less well. Put any conflict first, in bold. If the sources don't say whether it is safe
+    with their condition or medicine, say so.
+11. For children, pregnancy, and older adults, use their age and weight with rule 7, and show the
+    arithmetic. Never scale an adult dose yourself.
+12. Point out supplies on hand and training in the household that help (for example, an
     epinephrine auto-injector, or a member trained in CPR)."""
 
 
@@ -135,6 +146,31 @@ def _query_for(messages):
     return q
 
 
+# Child-dose guard. The prompt asks for child limits, but a small model can still copy an adult
+# maximum from a source. This check runs on the finished answer, in code, every time.
+_CHILD = re.compile(r"\b(child|children|kids?|son|daughter|toddler|baby|infant|newborn|grand(son|daughter|kid))\b"
+                    r"|\b(\d{1,2})[- ]?(month|week)s?[- ]old\b|\b([1-9]|1[0-2])[- ]?(year|yr)s?[- ]old\b", re.I)
+_DOSE = re.compile(r"\d\s*(mg|mcg|ml|tablets?|tabs?|teaspoons?|tsp|capsules?)\b", re.I)
+_ADULT_MAX = [(re.compile(r"acetaminophen|paracetamol|tylenol", re.I),
+               re.compile(r"\b[34],?000\s*mg|\b[34]\s*g\b|\b8 tablets\b", re.I), "acetaminophen"),
+              (re.compile(r"ibuprofen|advil|motrin", re.I),
+               re.compile(r"\b(1,?200|2,?400|3,?200)\s*mg", re.I), "ibuprofen")]
+
+
+def _dose_warning(question, answer):
+    if not (_CHILD.search(question) and _DOSE.search(answer)):
+        return None
+    msg = ("Child dose: check the amount and the daily limit against the source passage before you "
+           "give it. A child's daily limit is much lower than an adult's.")
+    for drug, adult, name in _ADULT_MAX:
+        if drug.search(answer) and adult.search(answer):
+            msg = (f"This answer mentions an adult daily maximum for {name}. Do not use it for a child. "
+                   "Use the child's dose times the doses per day in the source, and check the source passage. " + msg)
+    if llm.loaded_chat_model() == C.PROFILES["battery"]["file"]:
+        msg += " The 'Best answers' model is more reliable for children's doses."
+    return msg
+
+
 @app.post("/api/chat")
 async def chat(req: Request):
     body = await req.json()
@@ -157,16 +193,18 @@ async def chat(req: Request):
         system = SYSTEM + (HOUSEHOLD_RULES + "\n\n" + hh if hh else "")
         msgs = [{"role": "system", "content": system + "\n\nSOURCES:\n\n" + src}]
         msgs += [{"role": m["role"], "content": m["content"]} for m in messages]
-        n, t1 = 0, time.time()
+        n, t1, answer = 0, time.time(), ""
         try:
             for kind, piece in llm.chat_stream(msgs, think=think):
                 n += 1
+                answer += piece if kind == "content" else ""
                 yield _sse(kind, {"t": piece})
         except Exception as e:
             yield _sse("error", {"msg": f"chat model error: {e}"})
         dt = time.time() - t1
         yield _sse("done", {"tokens": n, "tok_s": round(n / dt, 1) if dt else None,
-                            "seconds": round(time.time() - t0, 1), "retrieval": timing})
+                            "seconds": round(time.time() - t0, 1), "retrieval": timing,
+                            "warn": _dose_warning(q, answer)})
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 

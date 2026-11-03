@@ -16,9 +16,28 @@ def db():
     return _local.db
 
 
+# Everyday words -> the words the library uses. Added to the keyword and vector search only;
+# the reranker still judges passages against the question as asked.
+EXPAND = [
+    (r"\bsmall engines?\b", "lawn mower chainsaw generator carburetor two-stroke"),
+    (r"\bepi-?pens?\b", "epinephrine auto-injector anaphylaxis"),
+    (r"\bheart attack\b", "myocardial infarction chest pain"),
+    (r"\bheat ?stroke\b", "hyperthermia heat illness"),
+    (r"\bnose ?bleeds?\b", "epistaxis"),
+    (r"\bpoison (oak|ivy|sumac)\b", "urushiol rash"),
+    (r"\b(boil|boiled) water (notice|advisory)\b", "drinking water disinfection"),
+    (r"\bpower (outage|cut|is out)\b", "blackout generator refrigerator food safety"),
+]
+
+
+def expand(q):
+    extra = [words for pat, words in EXPAND if re.search(pat, q, re.I)]
+    return " ".join([q, *extra])
+
+
 def _fts_query(q):
     words = [w for w in re.findall(r"[A-Za-z0-9]+", q.lower()) if w not in L.STOP and len(w) > 1]
-    return " OR ".join(f'"{w}"' for w in words[:16])
+    return " OR ".join(f'"{w}"' for w in words[:24])
 
 
 def _rows(ids):
@@ -50,7 +69,8 @@ def search(question, final=C.FINAL_PASSAGES):
     t = {}
     t0 = time.time()
     cands = {}
-    fq = _fts_query(question)
+    wide = expand(question)
+    fq = _fts_query(wide)
     if fq:
         for (cid,) in db().execute("SELECT rowid FROM fts WHERE fts MATCH ? ORDER BY bm25(fts, 4.0, 2.0, 1.0) LIMIT ?",
                                    (fq, C.TOP_K_FTS)):
@@ -58,7 +78,7 @@ def search(question, final=C.FINAL_PASSAGES):
     t["fts"] = time.time() - t0
     t1 = time.time()
     try:
-        qv = pack_bits(llm.embed([question], query=True)[0])
+        qv = pack_bits(llm.embed([wide], query=True)[0])
         for cid, dist in db().execute("SELECT rowid, distance FROM vec WHERE emb MATCH vec_bit(?) AND k=?",
                                       (qv, C.TOP_K_VEC)):
             cands.setdefault(cid, 0)

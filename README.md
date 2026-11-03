@@ -75,6 +75,9 @@ No cloud. No accounts. No telemetry. After setup, you can pull the network cable
   medical problems and warn about shock, fire, and carbon monoxide.
 - **Safety rules in the prompt.** The model must never invent doses, dilutions, wire sizes, or plant
   IDs. Any number must come from a source. Mushroom and wild-plant answers must name deadly look-alikes.
+- **Child-dose guard.** A check in code, not in the prompt, reads every finished answer. If the
+  question is about a child and the answer gives a dose, a red box tells you to check it against the
+  source. If the answer mentions an adult daily maximum for acetaminophen or ibuprofen, the box says so.
 - **Hybrid search.** Keyword (BM25) and meaning (vector) search over every passage, plus Wikipedia's
   own full-text index. A reranker picks the best 8.
 - **Three model profiles.** `battery` (fast MoE), `best` (dense, more careful), and `tiny` (runs on 16 GB).
@@ -264,13 +267,19 @@ If you share a built copy (for example, a drive for a neighbor), follow these li
 | Profile | Model | File size | Speed (M5 Max) | Use it when |
 |---|---|---|---|---|
 | `battery` (default) | Qwen3.6 35B-A3B, Q6_K | 29 GB | ~60 tokens/s | Most of the time. Mixture-of-experts: only ~3B parameters work per token, so it is fast and light on power. |
-| `best` | Qwen3.8 27B, Q8_0 | 29 GB | slower | Hard medical or technical questions. Dense and more careful. |
+| `best` | Qwen3.8 27B, Q8_0 | 29 GB | ~30–75 s per answer | Children's doses, and hard medical or technical questions. Dense and more careful. |
 | `tiny` | Gemma 4 E4B, Q4_0 | 5 GB | fast | Very low battery, or a Mac with 16 GB of memory. Least accurate. |
 
 Two helpers always run while Lifeboat is on. Together they use about 1.5 GB:
 
 - **Qwen3-Embedding-0.6B** (Q8_0) turns questions into vectors for meaning search.
 - **bge-reranker-v2-m3** (Q8_0) scores candidate passages.
+
+> [!IMPORTANT]
+> **Use `best` for children's doses.** In testing, `battery` sometimes copied an adult daily maximum
+> into a child's answer. One source prints "Do not give more than 8 tablets in 24 hours" right after
+> its child dose table, with no age. `best` got the child limit right in 5 of 5 tests. `battery` gave
+> the adult maximum in 3 of 5. The child-dose guard flags these answers, but read the source either way.
 
 All models are GGUF files run by `llama-server` with Metal. The default model and helpers live on
 the internal disk. `best` and `tiny` can live on the external drive. To change models, edit
@@ -298,7 +307,8 @@ knows Mia is 7, weighs 45 lb, and has a bee-sting allergy with an EpiPen Jr on h
 - Check every treatment, medicine, and food against that person's allergies, conditions, and medicines.
   Put any conflict first, in bold.
 - For children, pregnancy, and older adults, give only doses the sources state for that age or weight,
-  and show the arithmetic. Never scale an adult dose.
+  and show the arithmetic. Never scale an adult dose. A child's daily limit is the child's dose times
+  the doses per day in the source, never an adult maximum.
 - Point out supplies and training in the household that help.
 
 When a question names a child, an infant, or someone pregnant, the search also looks for passages about that group.
@@ -542,7 +552,8 @@ cited retrieval over the whole library.
 - Offline maps: OpenStreetMap / Protomaps regional extracts and USGS topo.
 - Linux + NVIDIA support.
 - More region files.
-- A small field-test suite with expected answers, to catch regressions in retrieval.
+- A small field-test suite with expected answers, to catch regressions in retrieval and dosing.
+- A second check pass for doses in every medical answer, not only children's.
 
 ## Contributing
 

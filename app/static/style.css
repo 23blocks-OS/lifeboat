@@ -114,3 +114,4 @@ dialog#hh .lead { color: var(--muted); margin: 4px 0 12px; }
   .q2 { grid-template-columns: 1fr; }
   body { font-size: 16px; }
 }
+.dose-warn { border: 2px solid var(--bad); border-radius: 8px; padding: 10px 12px; font-weight: 600; }
