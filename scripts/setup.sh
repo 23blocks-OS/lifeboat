@@ -24,7 +24,7 @@ fi
 
 # 2. Python 3.12 inside the project, and wheels saved so ./lifeboat can rebuild the venv offline
 say "Installing Python 3.12 and packages..."
-uv python install 3.12 --install-dir runtime/python
+uv python install 3.12 --install-dir runtime/python --no-bin
 BASE=$(ls -d runtime/python/cpython-3.12*/bin/python3.12 | head -1)
 [ -x .venv/bin/python ] || "$BASE" -m venv .venv
 mkdir -p vendor/wheels

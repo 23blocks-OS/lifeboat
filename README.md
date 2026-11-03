@@ -136,7 +136,14 @@ What each step does:
 ./lifeboat fetch 5          # later: full English Wikipedia with images (119 GB)
 ```
 
-`fetch` is safe to re-run. It resumes partial files, skips finished ones, and checks every sha256.
+`fetch` is safe to re-run. It resumes partial files and skips finished ones. It checks the sha256 of
+every model and archive against a pinned value or the publisher's checksum file. PDFs have no
+published checksums (agencies update them), so `fetch` records their sha256 but cannot check it.
+
+**Some PDFs need a browser.** A few government sites block scripted downloads. `fetch` tries each of
+these once. If the site blocks it, `fetch` lists the link and the path at the end. Open the link,
+save the PDF to that path, and run `fetch` again. These files are marked `"manual": true` in
+`sources_pdf.json`.
 
 ## Daily use
 
@@ -196,7 +203,8 @@ Short follow-up questions ("what if it's a child?") carry the earlier question i
 ## The library
 
 Every source is listed in `sources.json`, `sources_pdf.json`, or your `region.json`, with its URL and
-license. After `fetch`, `MANIFEST.json` records the size and sha256 of every file on your disk.
+license. After `fetch`, `MANIFEST.json` records the size and sha256 of every file on your disk, and
+whether that checksum was verified against the source.
 
 ### Archives (ZIM, from [Kiwix](https://kiwix.org))
 

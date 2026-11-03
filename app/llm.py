@@ -37,7 +37,7 @@ def start(name, model, port, extra, wait=True):
     if pid := running_pid(name):
         return pid
     if not Path(model).exists():
-        raise FileNotFoundError(f"model not on disk: {model}")
+        raise FileNotFoundError(f"{Path(model).name} is not on disk. Run ./lifeboat fetch first.")
     cmd = [str(C.LLAMA), "-m", str(model), "--host", C.HOST, "--port", str(port),
            "--offline", "--no-webui", "-ngl", "999", *extra]
     log = open(C.LOGS / f"{name}.log", "ab")

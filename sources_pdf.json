@@ -1,5 +1,5 @@
 {
- "_note": "Public-domain and free-to-use PDFs for every install. Links checked 2026-11-02 (HTTP 200 + %PDF). Hesperian: free for personal use, no resale. Local PDFs go in region.json.",
+ "_note": "Public-domain and free-to-use PDFs for every install. Links checked 2026-11-02 (HTTP 200 + %PDF). Hesperian: free for personal use, no resale. Local PDFs go in region.json. \"manual\": the site blocks scripted downloads (seen 2026-11-03); fetch tries once, then prints the link to save by hand.",
  "items": [
   {
    "id": "atp-3-50-21-survival",
@@ -118,21 +118,24 @@
    "title": "CDC Make Water Safe During an Emergency",
    "url": "https://www.cdc.gov/water-emergency/media/pdfs/make-water-safe-during-emergency-p.pdf",
    "license": "US Gov public domain",
-   "topic": "water"
+   "topic": "water",
+   "manual": true
   },
   {
    "id": "cdc-use-safe-water",
    "title": "CDC Use Safe Water During an Emergency (one-pager)",
    "url": "https://www.cdc.gov/water-emergency/media/pdfs/334749-B_UseSafeWater-OnePager-508.pdf",
    "license": "US Gov public domain",
-   "topic": "water"
+   "topic": "water",
+   "manual": true
   },
   {
    "id": "fema-food-water-emergency",
    "title": "FEMA/Red Cross Food and Water in an Emergency (FEMA 477)",
    "url": "https://www.fema.gov/pdf/library/f&web.pdf",
    "license": "US Gov public domain",
-   "topic": "water"
+   "topic": "water",
+   "manual": true
   },
   {
    "id": "lacofd-ready-set-go",
@@ -181,7 +184,8 @@
    "title": "CDC: When the power goes out, keep your generator outside (CO safety)",
    "url": "https://stacks.cdc.gov/view/cdc/47902/cdc_47902_DS1.pdf",
    "license": "US Gov public domain",
-   "topic": "power"
+   "topic": "power",
+   "manual": true
   },
   {
    "id": "cpsc-generator-safety",
@@ -195,7 +199,8 @@
    "title": "NIOSH Fast Facts: Protecting Yourself from Poisonous Plants (poison oak/ivy)",
    "url": "https://www.cdc.gov/niosh/docs/2010-118/pdfs/2010-118.pdf",
    "license": "US Gov public domain",
-   "topic": "medical"
+   "topic": "medical",
+   "manual": true
   },
   {
    "id": "cisa-nifog-2",

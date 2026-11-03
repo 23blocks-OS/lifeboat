@@ -10,6 +10,16 @@ mkdir -p "$PIDS" "$ROOT/logs"
 
 say() { printf '\033[1mLifeboat:\033[0m %s\n' "$*"; }
 
+# Run one line of Python against app.llm. A missing model prints one line, not a traceback.
+llm() {
+  "$PY" -c "import sys
+from app import llm
+try:
+    $1
+except FileNotFoundError as e:
+    sys.exit('\033[1mLifeboat:\033[0m ' + str(e))"
+}
+
 ensure_venv() {
   if "$PY" -c "import fastapi, libzim, sqlite_vec" 2>/dev/null; then return; fi
   say "Rebuilding the Python environment from saved wheels (no internet needed)..."
@@ -38,17 +48,17 @@ case "${1:-help}" in
   start)
     ensure_venv
     say "Starting search helpers (embedding + reranker, ~1.5 GB)..."
-    "$PY" -c "from app import llm; llm.start_helpers()"
+    llm "llm.start_helpers()"
     start_app
     if [ "${2:-}" != "--no-model" ]; then
       PROFILE="${2:-battery}"
       say "Loading chat model '$PROFILE' into memory (about 20-60 s)..."
-      "$PY" -c "from app import llm; llm.start_chat('$PROFILE')"
+      llm "llm.start_chat('$PROFILE')"
     fi
     say "Ready: $APP_URL"
     open "$APP_URL" 2>/dev/null || true
     ;;
-  load)    ensure_venv; "$PY" -c "from app import llm; llm.start_helpers(); llm.start_chat('${2:-battery}')"; say "Loaded ${2:-battery}." ;;
+  load)    ensure_venv; llm "llm.start_helpers(); llm.start_chat('${2:-battery}')"; say "Loaded ${2:-battery}." ;;
   unload)  "$PY" -c "from app import llm; print('unloaded' if llm.stop('chat') else 'nothing loaded')" ;;
   stop)
     "$PY" -c "from app import llm; [llm.stop(n) for n in ('chat','embed','rerank')]" 2>/dev/null || true

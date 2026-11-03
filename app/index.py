@@ -225,12 +225,15 @@ def main():
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--workers", type=int, default=max(mp.cpu_count() - 4, 2))
     a = ap.parse_args()
+    sources = list(list_sources())
+    if not sources:
+        sys.exit("Lifeboat: no archives or PDFs in library/. Run ./lifeboat fetch first.")
     from . import embedder, llm
     if a.embed == "local":
         llm.start_helpers()
     emb = embedder.make(a.embed)
     db = connect()
-    for kind, key, path, meta in list_sources():
+    for kind, key, path, meta in sources:
         if a.only and key not in a.only:
             continue
         if a.force:
@@ -242,4 +245,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except FileNotFoundError as e:
+        sys.exit(f"Lifeboat: {e}")
