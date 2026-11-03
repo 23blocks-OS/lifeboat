@@ -71,7 +71,7 @@ case "${1:-help}" in
   fetch)
     shift; caffeinate -is python3 scripts/fetch.py "$@" ;;
   verify-offline)
-    ensure_venv; "$PY" scripts/verify_offline.py ;;
+    shift; ensure_venv; "$PY" scripts/verify_offline.py "$@" ;;
   backup)
     DEST="${2:-}"
     if [ -z "$DEST" ] && [ -L data ]; then DEST="$(readlink data)/system"; fi

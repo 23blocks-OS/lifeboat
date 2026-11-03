@@ -78,8 +78,9 @@ def outside(lines):
 
 
 def wifi(on):
-    dev = "en0"
-    subprocess.run(["networksetup", "-setairportpower", dev, "on" if on else "off"])
+    ports = subprocess.run(["networksetup", "-listallhardwareports"], capture_output=True, text=True).stdout
+    m = re.search(r"Hardware Port: Wi-Fi\nDevice: (\S+)", ports)
+    subprocess.run(["networksetup", "-setairportpower", m[1] if m else "en0", "on" if on else "off"])
 
 
 def main():
