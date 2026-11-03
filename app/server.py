@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 from fastapi.staticfiles import StaticFiles
 
 from . import config as C
+from . import household as H
 from . import library as L
 from . import llm
 from . import retrieve as R
@@ -35,6 +36,18 @@ Rules:
    and heaters, warn about shock, fire and carbon monoxide.
 5. If sources disagree, say so and prefer military medical, government, or Hesperian sources.
 6. Be honest about uncertainty. A wrong confident answer can kill someone."""
+
+HOUSEHOLD_RULES = """
+7. Tailor the answer to the HOUSEHOLD below. If the question names a person, or says "my son",
+   "my wife", and so on, match it to the household and use that person's age, weight, conditions,
+   and medicines. If you can't tell who it is about, ask.
+8. Check every treatment, medicine, and food you suggest against the allergies, conditions, and
+   daily medicines of the person involved. Put any conflict first, in bold. If the sources don't
+   say whether it is safe with their condition or medicine, say so.
+9. For children, pregnancy, and older adults, give only doses the sources state for that age or
+   weight, and show the arithmetic with their weight. Never scale an adult dose yourself.
+10. Point out supplies on hand and training in the household that help (for example, an
+    epinephrine auto-injector, or a member trained in CPR)."""
 
 
 def _battery():
@@ -73,7 +86,8 @@ def status():
             "loading": state["loading"], "error": state["error"], "profiles": profiles,
             "helpers": {"embed": bool(llm.running_pid("embed")), "rerank": bool(llm.running_pid("rerank"))},
             "battery": _battery(), "drive_online": C.data_online(), "live_books": L.live_books(),
-            "index": {"sources": idx[0], "passages": idx[1], "vectors": idx[2]}}
+            "index": {"sources": idx[0], "passages": idx[1], "vectors": idx[2]},
+            "household": len(hh["people"]) if (hh := H.load()) else None}
 
 
 @app.post("/api/load")
@@ -129,7 +143,8 @@ async def chat(req: Request):
 
     def gen():
         t0 = time.time()
-        passages, timing, pool = R.search(_query_for(messages))
+        q = (_query_for(messages) + " " + H.search_hint(messages[-1]["content"])).strip()
+        passages, timing, pool = R.search(q)
         yield _sse("sources", {"passages": [_public(p) for p in passages], "timing": timing, "pool": pool})
         if not llm.running_pid("chat"):
             yield _sse("error", {"msg": "No chat model loaded. Showing library results only."})
@@ -138,7 +153,9 @@ async def chat(req: Request):
             f"[{i}] {p['title']} — {p['section'] or ''} ({p['source_title']}"
             + (f", page {p['page']}" if p.get("page") else "") + f")\n{p['context'][:3500]}"
             for i, p in enumerate(passages, 1))
-        msgs = [{"role": "system", "content": SYSTEM + "\n\nSOURCES:\n\n" + src}]
+        hh = H.prompt()
+        system = SYSTEM + (HOUSEHOLD_RULES + "\n\n" + hh if hh else "")
+        msgs = [{"role": "system", "content": system + "\n\nSOURCES:\n\n" + src}]
         msgs += [{"role": m["role"], "content": m["content"]} for m in messages]
         n, t1 = 0, time.time()
         try:
@@ -155,6 +172,16 @@ async def chat(req: Request):
 
 def _sse(event, data):
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+@app.get("/api/household")
+def household_get():
+    return H.load() or {}
+
+
+@app.put("/api/household")
+async def household_put(req: Request):
+    return H.save(await req.json())
 
 
 @app.get("/zim/{book}/{path:path}")

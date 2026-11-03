@@ -9,7 +9,7 @@ import html, sys, time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import config as C, llm, retrieve as R  # noqa: E402
+from app import config as C, household as H, llm, retrieve as R  # noqa: E402
 
 CHAPTERS = {
     "1. Life threats": [
@@ -80,6 +80,12 @@ def main():
                 parts.append(f'<div class="p"><div class="src">{html.escape(src)}</div>'
                              f'<div class="txt">{html.escape(p["context"][:2500])}</div></div>')
             parts.append("</section>")
+    hh = H.lines()
+    blank = "<p>______________________________________________</p>"
+    household = (f"<p><b>Household</b> (from Lifeboat's intake, {time.strftime('%Y-%m-%d')}). "
+                 "Cross out and correct anything that changes:</p><ul class='hh'>"
+                 + "".join(f"<li>{html.escape(l)}</li>" for l in hh) + "</ul>" + blank
+                 if hh else "<p>Household members, medical conditions, medications and allergies:</p>" + blank)
     page = f"""<!doctype html><html><head><meta charset="utf-8"><title>Lifeboat emergency binder</title>
 <style>
 body{{font:11pt/1.4 Georgia,serif;margin:0 auto;max-width:7.5in;padding:.4in;color:#000;background:#fff}}
@@ -87,7 +93,7 @@ h1.chapter{{page-break-before:always;font:bold 18pt Helvetica,Arial,sans-serif;b
 h2{{font:bold 13pt Helvetica,Arial,sans-serif;margin:14pt 0 4pt}}
 .topic{{page-break-inside:auto}} .p{{border-left:3px solid #999;padding-left:8pt;margin:6pt 0}}
 .src{{font:bold 9pt Helvetica,Arial,sans-serif;color:#333}} .txt{{white-space:pre-wrap;font-size:10pt}}
-.cover h1{{font:bold 28pt Helvetica,Arial,sans-serif}} .warn{{border:2px solid #000;padding:8pt;margin:12pt 0}}
+.hh li{{margin:3pt 0}} .cover h1{{font:bold 28pt Helvetica,Arial,sans-serif}} .warn{{border:2px solid #000;padding:8pt;margin:12pt 0}}
 </style></head><body>
 <div class="cover"><h1>Lifeboat emergency binder</h1>
 <p>Printed {time.strftime('%Y-%m-%d')}. Verbatim extracts from the offline library. No AI-written text.</p>
@@ -95,7 +101,7 @@ h2{{font:bold 13pt Helvetica,Arial,sans-serif;margin:14pt 0 4pt}}
 If any trained help can be reached, get it. Doses and amounts: follow the source exactly.</div>
 <h2>Contents</h2><ol>{''.join(toc)}</ol>
 <h2>Write in your own information</h2>
-<p>Household members, medical conditions, medications and allergies:</p><p>______________________________________________</p>
+{household}
 <p>Meeting points and evacuation routes{(' (' + html.escape(C.REGION['short']) + ')') if C.REGION['short'] else ''}:</p><p>______________________________________________</p>
 <p>Radio plan (frequencies, check-in times):</p><p>______________________________________________</p>
 </div>

@@ -13,7 +13,9 @@ __pycache__/
 *.pyc
 .DS_Store
 data
-# Your install: region, download record, printed binder
+# Your install: household (private health info), region, download record, printed binder
+household.json
+household.tmp
 region.json
 MANIFEST.json
 print/binder.html

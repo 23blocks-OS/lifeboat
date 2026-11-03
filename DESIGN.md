@@ -107,6 +107,9 @@ Total: ~95 GB core. ~215 GB with full Wikipedia. Add maps on top.
 - **Region is a setting.** `region.json` names the area, its main hazards, a test question, and local
   PDFs. The model is told where the user is and what the local hazards are. The repo ships a
   Los Angeles County example: earthquake, wildfire and smoke, heat, post-fire debris flows, tsunami.
+- **Household profile.** A web intake writes `household.json` (owner-only, not in git): people's
+  ages, weights, conditions, medicines, allergies, and training, plus the home's water, heat, power, and
+  supplies. It goes into every prompt with rules to check conflicts and never scale adult doses.
 - **Wikipedia:** full, with images (119 GB). Searched live through the archive's own Xapian index.
 - **Access:** laptop only. Bind to 127.0.0.1.
 - **Paper backup:** `./lifeboat print` builds a binder of verbatim passages for ~50 critical procedures.

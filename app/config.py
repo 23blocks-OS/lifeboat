@@ -12,6 +12,7 @@ DATA_MODELS = DATA / "models"
 ZIM_DIR = ROOT / "library" / "zim"
 PDF_DIR = ROOT / "library" / "pdf"
 DB_PATH = ROOT / "index" / "index.sqlite"
+HOUSEHOLD = ROOT / "household.json"     # your family and home; private, not in git
 
 
 def model_path(name):

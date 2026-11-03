@@ -30,6 +30,7 @@
 - [How an answer is made](#how-an-answer-is-made)
 - [The library](#the-library)
 - [Models](#models)
+- [Your household](#your-household)
 - [Your region](#your-region)
 - [Offline guarantee](#offline-guarantee)
 - [Power and battery](#power-and-battery)
@@ -80,6 +81,8 @@ No cloud. No accounts. No telemetry. After setup, you can pull the network cable
 - **Library-only mode.** No model loaded? Search still works and shows source passages, at very low power.
 - **Works with the drive unplugged.** The index stores passage text, so answers still work if the
   external drive with the archives is missing.
+- **Knows your household.** A short intake records ages, weights, conditions, medicines, and allergies.
+  Answers use the right person's details and flag any conflict with their allergies or medicines.
 - **Region aware.** One file tells it where you are and what your local hazards are.
 - **Provably offline.** `./lifeboat verify-offline` checks every socket while it answers 15 test questions.
 - **Paper backup.** `./lifeboat print` builds a printable binder of ~50 critical procedures, with
@@ -265,6 +268,38 @@ All models are GGUF files run by `llama-server` with Metal. The default model an
 the internal disk. `best` and `tiny` can live on the external drive. To change models, edit
 `PROFILES` in `app/config.py` and the matching entries in `sources.json`.
 
+## Your household
+
+The first time you open Lifeboat, a short intake asks about your home and the people you live with.
+You can skip any question, and change anything later with the **Household** button.
+
+| For each person | For the home |
+|---|---|
+| Name, birth year, sex, weight | Rural, town, or city, and anything about the location |
+| Pregnant or breastfeeding | Water source and storage |
+| Health conditions and daily medicines, with doses | Heat and cooking |
+| Allergies, and what happens | Backup power |
+| Blood type | Medical and emergency supplies on hand |
+| Mobility, vision, hearing, or other needs | Pets and their needs |
+| First aid or other training | |
+
+Every answer then uses it. Ask "Mia got stung by a bee and her lips are swelling", and the model
+knows Mia is 7, weighs 45 lb, and has a bee-sting allergy with an EpiPen Jr on hand. The rules say:
+
+- Match "Mia", "my son", or "my wife" to the right person, and ask if it is unclear.
+- Check every treatment, medicine, and food against that person's allergies, conditions, and medicines.
+  Put any conflict first, in bold.
+- For children, pregnancy, and older adults, give only doses the sources state for that age or weight,
+  and show the arithmetic. Never scale an adult dose.
+- Point out supplies and training in the household that help.
+
+When a question names a child, an infant, or someone pregnant, the search also looks for passages about that group.
+
+**Privacy.** The answers live only in `household.json` in the project folder. The file is readable
+by your user account only, git ignores it, and it never leaves the Mac. `./lifeboat backup` copies it,
+and `./lifeboat print` puts it on the binder's cover page. It holds health information, so keep
+FileVault on.
+
 ## Your region
 
 `region.json` tells Lifeboat where you are. The model is told your area and its main hazards, so
@@ -379,13 +414,14 @@ environment is broken, `start` rebuilds it from `vendor/wheels` with no internet
 **Paper backup.** `./lifeboat print` searches the library for about 50 critical procedures in 10
 chapters: life threats, injuries, illness, bites and poisons, water, food, fire and shelter, power,
 navigation, and radio. It writes `print/binder.html` with three verbatim passages per topic, their
-sources, and no AI-written text. The cover has blanks for your household's medical information,
-meeting points, and radio plan. Print it from the browser and keep it with your kit.
+sources, and no AI-written text. The cover lists your household from the intake, with blanks for
+corrections, meeting points, and a radio plan. Print it from the browser and keep it with your kit.
 
 ## Configuration
 
 | File | What it controls |
 |---|---|
+| `household.json` | Your people, health details, home, and pets (written by the intake; not in git) |
 | `region.json` | Your area, hazards, test question, and local PDFs (not in git) |
 | `app/config.py` | Paths, ports, model profiles, context sizes, and retrieval settings |
 | `sources.json` | Models and ZIM archives to download, with sha256 and license |
@@ -414,6 +450,7 @@ lifeboat/
   lifeboat                 control script (start, stop, load, fetch, index, ...)
   app/
     config.py              paths, ports, models, region
+    household.py           your household: storage and the text the model sees
     server.py              FastAPI app: chat (SSE), search, load/unload, archive reader
     llm.py                 starts and stops llama-server processes
     retrieve.py            hybrid search, rerank, neighbor widening
@@ -436,7 +473,7 @@ lifeboat/
   DESIGN.md                research and design decisions
 ```
 
-Not in git: `bin/`, `models/`, `data/`, `library/`, `index/`, `runtime/`, `vendor/wheels/`, `.venv/`, `logs/`.
+Not in git: `household.json`, `region.json`, `bin/`, `models/`, `data/`, `library/`, `index/`, `runtime/`, `vendor/wheels/`, `.venv/`, `logs/`.
 
 ## Performance
 

@@ -74,6 +74,8 @@ async function refresh() {
   if (b.percent != null) pills += pill(`${b.on_ac ? "⚡ " : ""}Battery ${b.percent}%`, b.on_ac ? "ok" : b.percent < 25 ? "bad" : b.percent < 50 ? "warn" : "");
   pills += pill(s.drive_online ? "Drive connected" : "Drive missing", s.drive_online ? "ok" : "warn");
   pills += pill(`${(s.index.passages || 0).toLocaleString()} passages`, s.index.passages ? "" : "warn");
+  $("#hhBtn").textContent = s.household ? `Household (${s.household})` : "Household";
+  if (s.household == null) maybeOfferIntake();
   if (s.error) pills += pill(`Error: ${s.error}`.slice(0, 80), "bad");
   $("#pills").innerHTML = pills;
 }

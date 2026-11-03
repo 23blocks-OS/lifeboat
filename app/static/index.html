@@ -12,6 +12,7 @@
   <div class="model">
     <select id="profile" aria-label="Chat model"></select>
     <button id="loadBtn" class="primary">Load model</button>
+    <button id="hhBtn" type="button" title="People, health, and home that answers are tailored to">Household</button>
   </div>
   <div class="pills" id="pills"></div>
 </header>
@@ -41,6 +42,21 @@
   </div>
 </form>
 
+<dialog id="hh" aria-labelledby="hhTitle">
+  <form method="dialog" id="hhForm" autocomplete="off">
+    <div class="hh-top"><span id="hhStep" class="hh-step"></span><button type="button" id="hhClose" class="link" aria-label="Close">✕</button></div>
+    <h2 id="hhTitle"></h2>
+    <div id="hhBody"></div>
+    <div class="row hh-nav">
+      <button type="button" id="hhBack">Back</button>
+      <span class="grow"></span>
+      <button type="button" id="hhAdd" hidden>Add another person</button>
+      <button type="button" id="hhNext" class="primary">Next</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="/static/app.js"></script>
+<script src="/static/household.js"></script>
 </body>
 </html>
