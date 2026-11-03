@@ -1,0 +1,43 @@
+{
+  "_note": "Everything Lifeboat downloads. 'group' sets the download order. 'fetch.py' checks every sha256 and writes MANIFEST.json.",
+  "items": [
+    {"id": "embed", "group": "1-base", "dest": "models/Qwen3-Embedding-0.6B-Q8_0.gguf",
+     "url": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/main/Qwen3-Embedding-0.6B-Q8_0.gguf",
+     "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439", "license": "Apache-2.0"},
+    {"id": "rerank", "group": "1-base", "dest": "models/bge-reranker-v2-m3-Q8_0.gguf",
+     "url": "https://huggingface.co/gpustack/bge-reranker-v2-m3-GGUF/resolve/main/bge-reranker-v2-m3-Q8_0.gguf",
+     "sha256": "a43c7c9b11a4c1517e5bf95151960e1621d1b72f7a493364b01e386cf1aaa1d3", "license": "Apache-2.0"},
+    {"id": "qwen36-35b-a3b", "group": "1-base", "dest": "models/Qwen3.6-35B-A3B-UD-Q6_K.gguf",
+     "url": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q6_K.gguf",
+     "sha256": "4fe53b148b46f9b88830e2a3055c5b15c3a4d1e3ddc9a1384a108d8b9d59f043", "license": "Apache-2.0"},
+
+    {"id": "zim-medicine-wp", "group": "2-core", "dest": "library/zim/wikipedia_en_medicine_maxi_2026-10.zim", "kiwix": "wikipedia", "license": "CC BY-SA"},
+    {"id": "zim-zimgit-medicine", "group": "2-core", "dest": "library/zim/zimgit-medicine_en_2024-08.zim", "kiwix": "other", "license": "Various open"},
+    {"id": "zim-zimgit-post-disaster", "group": "2-core", "dest": "library/zim/zimgit-post-disaster_en_2024-05.zim", "kiwix": "other", "license": "Various open"},
+    {"id": "zim-zimgit-water", "group": "2-core", "dest": "library/zim/zimgit-water_en_2024-08.zim", "kiwix": "other", "license": "Various open"},
+    {"id": "zim-zimgit-knots", "group": "2-core", "dest": "library/zim/zimgit-knots_en_2024-08.zim", "kiwix": "other", "license": "Various open"},
+    {"id": "zim-zimgit-food", "group": "2-core", "dest": "library/zim/zimgit-food-preparation_en_2025-04.zim", "kiwix": "other", "license": "Various open"},
+    {"id": "zim-appropedia", "group": "2-core", "dest": "library/zim/appropedia_en_all_maxi_2026-02.zim", "kiwix": "other", "license": "CC BY-SA"},
+    {"id": "zim-energypedia", "group": "2-core", "dest": "library/zim/energypedia_en_all_maxi_2026-06.zim", "kiwix": "other", "license": "CC BY-SA"},
+    {"id": "zim-ifixit", "group": "2-core", "dest": "library/zim/ifixit_en_all_2025-12.zim", "kiwix": "ifixit", "license": "CC BY-NC-SA (personal use)"},
+    {"id": "zim-se-medsci", "group": "2-core", "dest": "library/zim/medicalsciences.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-outdoors", "group": "2-core", "dest": "library/zim/outdoors.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-mechanics", "group": "2-core", "dest": "library/zim/mechanics.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-diy", "group": "2-core", "dest": "library/zim/diy.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-electronics", "group": "2-core", "dest": "library/zim/electronics.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-gardening", "group": "2-core", "dest": "library/zim/gardening.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-cooking", "group": "2-core", "dest": "library/zim/cooking.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-ham", "group": "2-core", "dest": "library/zim/ham.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-se-sustainability", "group": "2-core", "dest": "library/zim/sustainability.stackexchange.com_en_all_2026-10.zim", "kiwix": "stack_exchange", "license": "CC BY-SA"},
+    {"id": "zim-wikibooks", "group": "2-core", "dest": "library/zim/wikibooks_en_all_maxi_2026-10.zim", "kiwix": "wikibooks", "license": "CC BY-SA"},
+
+    {"id": "qwen38-27b", "group": "3-models", "dest": "data/models/Qwen3.8-27B-Q8_0.gguf",
+     "url": "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-Q8_0.gguf",
+     "sha256": "a680f44a06920e5d689774823782006aa3acc8db95750323373b24139b67e348", "license": "Apache-2.0"},
+    {"id": "gemma4-e4b", "group": "3-models", "dest": "data/models/gemma-4-E4B_q4_0-it.gguf",
+     "url": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf",
+     "sha256": "676c35070db6dbe52f93e9c864ee0fba4eddea94b9c875d9cb10daff453fbaee", "license": "Gemma terms"},
+
+    {"id": "zim-wikipedia", "group": "5-wikipedia", "dest": "library/zim/wikipedia_en_all_maxi_2026-08.zim", "kiwix": "wikipedia", "license": "CC BY-SA"}
+  ]
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lifeboat</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="mark">+</span>Lifeboat <small>offline</small></div>
+  <div class="model">
+    <select id="profile" aria-label="Chat model"></select>
+    <button id="loadBtn" class="primary">Load model</button>
+  </div>
+  <div class="pills" id="pills"></div>
+</header>
+
+<div class="banner" role="note">
+  <strong>Aid, not authority.</strong> Read the source text under each answer before you act.
+  For a life-threatening emergency, get trained help if any can be reached.
+</div>
+
+<main id="log" aria-live="polite">
+  <section class="welcome" id="welcome">
+    <h1>What do you need to know?</h1>
+    <p>Answers come from an offline library: medical manuals, survival guides, iFixit repair guides,
+      appropriate-technology wikis, Stack Exchange, and Wikipedia. Every answer cites its sources.</p>
+    <p class="hint">No model loaded? <b>Search library</b> still works and uses very little power.</p>
+    <div class="quick" id="quick"></div>
+  </section>
+</main>
+
+<form id="ask" autocomplete="off">
+  <textarea id="q" rows="2" placeholder="Describe the situation. Example: deep cut on forearm, bleeding won't stop" required></textarea>
+  <div class="row">
+    <label class="think"><input type="checkbox" id="think"> Think harder (slower, more power)</label>
+    <span class="grow"></span>
+    <button type="button" id="searchBtn">Search library</button>
+    <button type="submit" id="askBtn" class="primary">Ask</button>
+  </div>
+</form>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

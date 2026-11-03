@@ -1,0 +1,95 @@
+#!/bin/bash
+# Lifeboat control script. Run ./lifeboat help
+set -euo pipefail
+cd "$(dirname "$0")"
+ROOT="$PWD"
+PY="$ROOT/.venv/bin/python"
+PIDS="$ROOT/logs/pids"
+APP_URL="http://127.0.0.1:9110"
+mkdir -p "$PIDS" "$ROOT/logs"
+
+say() { printf '\033[1mLifeboat:\033[0m %s\n' "$*"; }
+
+ensure_venv() {
+  if "$PY" -c "import fastapi, libzim, sqlite_vec" 2>/dev/null; then return; fi
+  say "Rebuilding the Python environment from saved wheels (no internet needed)..."
+  local base
+  base=$(ls -d "$ROOT"/runtime/python/cpython-3.12*/bin/python3.12 2>/dev/null | head -1 || true)
+  [ -n "$base" ] || { say "No bundled Python in runtime/. Install Python 3.12 and retry."; exit 1; }
+  rm -rf "$ROOT/.venv"
+  "$base" -m venv "$ROOT/.venv"
+  "$PY" -m pip install -q --no-index --find-links "$ROOT/vendor/wheels" -r "$ROOT/requirements.txt"
+}
+
+app_pid() { [ -f "$PIDS/app.pid" ] && kill -0 "$(cat "$PIDS/app.pid")" 2>/dev/null && cat "$PIDS/app.pid" || true; }
+
+start_app() {
+  if [ -n "$(app_pid)" ]; then say "Web app already running at $APP_URL"; return; fi
+  nohup "$PY" -m uvicorn app.server:app --host 127.0.0.1 --port 9110 --log-level warning \
+    >> "$ROOT/logs/app.log" 2>&1 &
+  echo $! > "$PIDS/app.pid"
+  for _ in $(seq 1 40); do curl -fs "$APP_URL/api/status" >/dev/null 2>&1 && return; sleep 0.25; done
+  say "Web app did not start. See logs/app.log"; exit 1
+}
+
+case "${1:-help}" in
+  setup)
+    shift; scripts/setup.sh "$@" ;;
+  start)
+    ensure_venv
+    say "Starting search helpers (embedding + reranker, ~1.5 GB)..."
+    "$PY" -c "from app import llm; llm.start_helpers()"
+    start_app
+    if [ "${2:-}" != "--no-model" ]; then
+      PROFILE="${2:-battery}"
+      say "Loading chat model '$PROFILE' into memory (about 20-60 s)..."
+      "$PY" -c "from app import llm; llm.start_chat('$PROFILE')"
+    fi
+    say "Ready: $APP_URL"
+    open "$APP_URL" 2>/dev/null || true
+    ;;
+  load)    ensure_venv; "$PY" -c "from app import llm; llm.start_helpers(); llm.start_chat('${2:-battery}')"; say "Loaded ${2:-battery}." ;;
+  unload)  "$PY" -c "from app import llm; print('unloaded' if llm.stop('chat') else 'nothing loaded')" ;;
+  stop)
+    "$PY" -c "from app import llm; [llm.stop(n) for n in ('chat','embed','rerank')]" 2>/dev/null || true
+    [ -n "$(app_pid)" ] && kill "$(app_pid)" && rm -f "$PIDS/app.pid"
+    say "Stopped. Memory is free." ;;
+  status)
+    curl -fs "$APP_URL/api/status" | "$PY" -m json.tool 2>/dev/null || say "Web app is not running." ;;
+  index)
+    shift; ensure_venv; caffeinate -is "$PY" -m app.index "$@" ;;
+  fetch)
+    shift; caffeinate -is python3 scripts/fetch.py "$@" ;;
+  verify-offline)
+    ensure_venv; "$PY" scripts/verify_offline.py ;;
+  backup)
+    DEST="${2:-}"
+    if [ -z "$DEST" ] && [ -L data ]; then DEST="$(readlink data)/system"; fi
+    [ -n "$DEST" ] || { say "Usage: ./lifeboat backup /Volumes/YourDrive/lifeboat"; exit 1; }
+    say "Copying the program, models, and index to $DEST ..."
+    mkdir -p "$DEST"
+    rsync -a --delete --info=progress2 --exclude data --exclude library --exclude .venv \
+      --exclude logs --exclude '*.part' "$ROOT/" "$DEST/"
+    [ -L data ] && say "Done. Archives and PDFs already live in $(readlink data)." || \
+      rsync -a --info=progress2 --exclude '*.part' "$ROOT/data/" "$DEST/data/"
+    say "To restore on another Mac: copy $DEST to the new Mac, link 'data' to the drive, run ./lifeboat start." ;;
+  print)
+    ensure_venv; "$PY" scripts/make_binder.py; open "$ROOT/print/binder.html" ;;
+  help|*)
+    cat <<EOF
+Lifeboat, the offline emergency assistant
+
+  ./lifeboat start [battery|best|tiny]   start everything and load a chat model (default: battery)
+  ./lifeboat start --no-model           library search only (lowest power)
+  ./lifeboat load best | unload         switch or free the chat model
+  ./lifeboat stop                       stop everything, free all memory
+  ./lifeboat status                     show what is running
+  ./lifeboat verify-offline             test that nothing uses the network
+  ./lifeboat backup [dest]              copy program + models + index (default: next to 'data')
+  ./lifeboat print                      build the printable emergency binder
+  ./lifeboat setup [data-dir]           (setup, needs internet) install llama.cpp and Python
+  ./lifeboat index [--embed ssh:host]   (setup) build the search index
+  ./lifeboat fetch [groups]             (setup, needs internet) download models and archives
+EOF
+    ;;
+esac

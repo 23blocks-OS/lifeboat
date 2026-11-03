@@ -1,0 +1,33 @@
+{
+ "_note": "Example region. Copy to region.json and edit it for your area. See regions/README.md.",
+ "name": "Los Angeles County, California",
+ "short": "Los Angeles County",
+ "hazards": "earthquakes, wildfire and smoke, extreme heat, debris flows and flash floods after fires, and tsunami on the coast",
+ "test_question": [
+  "hazards",
+  "A major earthquake just hit. What do I do now and in the next hour?"
+ ],
+ "pdfs": [
+  {
+   "id": "usgs-shakeout-scenario",
+   "title": "USGS OFR 2008-1150 The ShakeOut Scenario (M7.8 southern San Andreas earthquake)",
+   "url": "https://pubs.usgs.gov/of/2008/1150/of2008-1150.pdf",
+   "license": "US Gov public domain",
+   "topic": "hazards"
+  },
+  {
+   "id": "usgs-safrr-tsunami-fs",
+   "title": "USGS FS 2013-3081 The SAFRR Tsunami Scenario: Improving Resilience for California",
+   "url": "https://pubs.usgs.gov/fs/2013/3081/pdf/fs2013-3081.pdf",
+   "license": "US Gov public domain",
+   "topic": "hazards"
+  },
+  {
+   "id": "usgs-socal-debris-flows",
+   "title": "USGS FS 2005-3106 Southern California: Wildfires and Debris Flows",
+   "url": "https://pubs.usgs.gov/fs/2005/3106/pdf/FS-3106.pdf",
+   "license": "US Gov public domain",
+   "topic": "hazards"
+  }
+ ]
+}

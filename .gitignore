@@ -1,0 +1,19 @@
+# Large or machine-specific files. Never commit these.
+bin/
+models/
+library
+index/
+maps/
+runtime/
+logs/
+vendor/wheels/
+print/*.pdf
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+data
+# Your install: region, download record, printed binder
+region.json
+MANIFEST.json
+print/binder.html
