@@ -76,12 +76,14 @@ PROFILES = {
         "label": "Emergency low power: Gemma 4 E4B (small, least accurate)",
         "file": "gemma-4-E4B_q4_0-it.gguf", "ctx": 16384,
     },
-    "jetson": {
-        # Phase 0 candidate, not a final choice: shares the Intercambio kiosk
-        # model (Qwen3-VL 4B). Text-only use, so no mmproj file is needed.
-        # Quality (cited answers, child-dose guard) must be re-tested at this
-        # size before relying on it; swapping the file is a one-line change.
-        "label": "Jetson: Qwen3-VL 4B (shared with the Intercambio kiosk)",
+    "small": {
+        # Small-model stream (separate from the general Linux/NVIDIA port):
+        # for constrained machines, e.g. the Jetson. Shares the Intercambio
+        # kiosk model (Qwen3-VL 4B). Text-only use, so no mmproj file is
+        # needed. Quality (cited answers, child-dose guard) must be
+        # re-tested at this size before relying on it; swapping the file
+        # is a one-line change.
+        "label": "Small box: Qwen3-VL 4B (constrained machines, e.g. Jetson)",
         "file": "Qwen3VL-4B-Instruct-Q4_K_M.gguf", "ctx": 8192,
     },
 }

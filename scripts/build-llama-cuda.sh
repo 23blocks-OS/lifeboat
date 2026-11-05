@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build llama.cpp with CUDA for Linux/NVIDIA (Jetson ARM64 or x86_64).
+# Build llama.cpp with CUDA for Linux/NVIDIA (ARM64 or x86_64, any size box).
 # Run by scripts/setup.sh on Linux, or directly: ./scripts/build-llama-cuda.sh
 # Needs: git, cmake, a CUDA toolkit (nvcc). The first build is slow (30-60+ min
 # on the Jetson); the binary in bin/ is reused afterwards. NOT run in the
@@ -22,8 +22,8 @@ if [ ! -d build/llama.cpp ]; then
   git clone --depth 1 --branch "$LLAMA_TAG" https://github.com/ggml-org/llama.cpp build/llama.cpp
 fi
 
-# JOBS caps the parallel build: a full-parallel nvcc build can run an 8 GB
-# Jetson out of memory. Override with JOBS=8 on a bigger machine.
+# JOBS caps the parallel build: a full-parallel nvcc build can run a small
+# machine out of memory. Override with JOBS=8 on a bigger machine.
 JOBS="${JOBS:-4}"
 say "Configuring (GGML_CUDA=ON) and building llama-server with $JOBS jobs..."
 cmake -S build/llama.cpp -B build/llama.cpp/build \
