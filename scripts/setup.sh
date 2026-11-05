@@ -8,18 +8,35 @@ ROOT="$PWD"
 LLAMA_TAG=b12061
 say() { printf '\033[1mLifeboat setup:\033[0m %s\n' "$*"; }
 
-[ "$(uname -s)-$(uname -m)" = "Darwin-arm64" ] || { say "Lifeboat needs an Apple Silicon Mac."; exit 1; }
-command -v uv >/dev/null || { say "Install uv first: brew install uv"; exit 1; }
+# Platform: one portable main. Mac runs the Metal binary, Linux/NVIDIA builds
+# llama.cpp from source with CUDA (scripts/build-llama-cuda.sh).
+PLATFORM="$(uname -s)-$(uname -m)"
+case "$PLATFORM" in
+  Darwin-arm64) ;;
+  Linux-aarch64|Linux-x86_64) ;;
+  *) say "Lifeboat runs on an Apple Silicon Mac or Linux with NVIDIA (Jetson / x86). This machine is $PLATFORM."; exit 1 ;;
+esac
 
-# 1. llama.cpp (pinned release, Metal build)
+if [ "${PLATFORM%%-*}" = "Darwin" ]; then
+  command -v uv >/dev/null || { say "Install uv first: brew install uv"; exit 1; }
+else
+  command -v uv >/dev/null || { say "Install uv first: curl -LsSf https://astral.sh/uv/install.sh | sh"; exit 1; }
+fi
+
+# 1. llama.cpp (pinned release)
 if [ ! -x bin/llama-server ]; then
-  say "Downloading llama.cpp $LLAMA_TAG..."
-  mkdir -p bin/llama
-  curl -fL --progress-bar -o bin/llama.tgz \
-    "https://github.com/ggml-org/llama.cpp/releases/download/$LLAMA_TAG/llama-$LLAMA_TAG-bin-macos-arm64.tar.gz"
-  tar -xzf bin/llama.tgz -C bin/llama && rm bin/llama.tgz
-  xattr -dr com.apple.quarantine bin/llama 2>/dev/null || true
-  ln -sf "llama/llama-$LLAMA_TAG/llama-server" bin/llama-server
+  if [ "${PLATFORM%%-*}" = "Darwin" ]; then
+    say "Downloading llama.cpp $LLAMA_TAG (macOS Metal build)..."
+    mkdir -p bin/llama
+    curl -fL --progress-bar -o bin/llama.tgz \
+      "https://github.com/ggml-org/llama.cpp/releases/download/$LLAMA_TAG/llama-$LLAMA_TAG-bin-macos-arm64.tar.gz"
+    tar -xzf bin/llama.tgz -C bin/llama && rm bin/llama.tgz
+    xattr -dr com.apple.quarantine bin/llama 2>/dev/null || true
+    ln -sf "llama/llama-$LLAMA_TAG/llama-server" bin/llama-server
+  else
+    say "Building llama.cpp $LLAMA_TAG with CUDA (slow first build, then reused)..."
+    scripts/build-llama-cuda.sh
+  fi
 fi
 
 # 2. Python 3.12 inside the project, and wheels saved so ./lifeboat can rebuild the venv offline
@@ -44,5 +61,9 @@ if [ ! -f region.json ]; then
   say "Wrote region.json from the Los Angeles example. Edit it for your area (see regions/README.md)."
 fi
 
-command -v aria2c >/dev/null || say "Tip: 'brew install aria2' makes archive downloads much faster."
+if [ "${PLATFORM%%-*}" = "Darwin" ]; then
+  command -v aria2c >/dev/null || say "Tip: 'brew install aria2' makes archive downloads much faster."
+else
+  command -v aria2c >/dev/null || say "Tip: 'sudo apt install aria2' makes archive downloads much faster."
+fi
 say "Done. Next: ./lifeboat fetch   then ./lifeboat index   then ./lifeboat start"
